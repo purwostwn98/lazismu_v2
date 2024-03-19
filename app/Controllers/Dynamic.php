@@ -21,6 +21,14 @@ use App\Models\PenghasilanModel;
 use App\Models\PenghimpunanModel;
 use App\Models\PenghimpunanKtgModel;
 use App\Models\PenghimpunanSubktgModel;
+use App\Models\FormB3Model;
+use App\Models\BentukpenyerahanModel;
+use App\Models\LembagaModel;
+use App\Models\LogajuanModel;
+use App\Models\NotulensiModel;
+use App\Models\NotulensiAgendaModel;
+use App\Models\NotulensiAjuanModel;
+use CodeIgniter\I18n\Time;
 
 class Dynamic extends BaseController
 {
@@ -43,6 +51,14 @@ class Dynamic extends BaseController
     protected $ajuanModel;
     protected $individuModel;
     protected $muzakiModel;
+    protected $formB3Model;
+    protected $bentukbantuanModel;
+    protected $kategori_penerimaModel;
+    protected $notulensiModel;
+    protected $notulensiAjuanModel;
+    protected $notulensiAgendaModel;
+    protected $lembagaModel;
+    protected $logAjuanModel;
 
     public function __construct()
     {
@@ -65,6 +81,14 @@ class Dynamic extends BaseController
         $this->ajuanModel = new AjuanModel();
         $this->individuModel = new IndividuModel();
         $this->penghasilanModel = new PenghasilanModel();
+        $this->formB3Model = new FormB3Model();
+        $this->bentukbantuanModel = new BentukpenyerahanModel();
+        $this->kategori_penerimaModel = new KategoripenerimaModel();
+        $this->notulensiModel = new NotulensiModel();
+        $this->notulensiAjuanModel = new NotulensiAjuanModel();
+        $this->notulensiAgendaModel = new NotulensiAgendaModel();
+        $this->lembagaModel = new LembagaModel();
+        $this->logAjuanModel = new LogajuanModel();
     }
 
     public function form_tindakan()
@@ -554,6 +578,181 @@ class Dynamic extends BaseController
             ];
             $msg = [
                 'data' => view('admin/penghimpunan/dinamis/sub_ktg_select', $data),
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_modal_b3()
+    {
+        if ($this->request->isAJAX()) {
+            $noajuan = $this->request->getVar('noajuan');
+            $cek_data = $this->formB3Model->where('nomor_ajuan', $noajuan)->first();
+
+            if (!empty($cek_data)) {
+                $data = $cek_data;
+                $asnaf = $this->kategori_penerimaModel->where('id_dana_dari', $cek_data['dana_dari'])->findAll();
+            } else {
+                $data = null;
+                $asnaf = [];
+            }
+
+            $data =  [
+                'data' => $cek_data,
+                'no_ajuan' => $noajuan,
+                'asnaf' => $asnaf,
+                'bentuk_bantuan' => $this->bentukbantuanModel->findAll(),
+            ];
+            $msg = [
+                'data' => view('admin/tambahan/modal_form_b3', $data),
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_sel_bentuk_penyerahan()
+    {
+        if ($this->request->isAJAX()) {
+            $sumber = $this->request->getVar('sumber');
+            $cek_data = $this->kategori_penerimaModel->where('id_dana_dari', $sumber)->findAll();
+            $opt = '<option value="" selected disabled>Pilih Asnaf</option>';
+            foreach ($cek_data as $key => $v) {
+                $opt .= '<option value="' . $v['id_kategori_penerima'] . '">' . $v['ket_kategori_penerima'] . '</option>';
+            }
+            $msg = [
+                'opt' => $opt,
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_tr_ajuan_notulensi()
+    {
+        if ($this->request->isAJAX()) {
+            $idnotulensi = $this->request->getPost('idnotulensi');
+            $notulensi_ajuan = $this->notulensiAjuanModel->where('idnotulensi', $idnotulensi)
+                ->join('tr_ajuan', 'tr_notulensi_ajuan.nomor_ajuan = tr_ajuan.nomor_ajuan')
+                ->join('dt_status_ajuan as sts', 'tr_ajuan.status_ajuan = sts.id_status')
+                ->findAll();
+            $tr = "";
+            if (!empty($notulensi_ajuan)) {
+                foreach ($notulensi_ajuan as $key => $v) {
+                    $mustahik = "belum diisi";
+                    if ($v['jenis_ajuan'] == "Lembaga") {
+                        $lembaga = $this->lembagaModel->where('nomor_ajuan', $v['nomor_ajuan'])->first();
+                        $mustahik = $lembaga['nama_lembaga'];
+                    } elseif ($v['jenis_ajuan'] == "Individu") {
+                        $individu = $this->individuModel->where('nomor_ajuan', $v['nomor_ajuan'])->first();
+                        if (!empty($individu)) {
+                            $mustahik = $individu['nama_mustahik'];
+                        }
+                    }
+
+                    $b3 = $this->formB3Model->where('nomor_ajuan', $v['nomor_ajuan'])
+                        ->join('dt_kategori_penerima', 'tr_form_b3.kategori_penerima = dt_kategori_penerima.id_kategori_penerima')
+                        ->join('dt_bentuk_penyerahan', 'tr_form_b3.bentuk_penyerahan = dt_bentuk_penyerahan.id_bentuk_penyerahan')
+                        ->first();
+                    if (!empty($b3)) {
+                        $sumber_dana = $b3['dana_dari'];
+                        $asnaf = $b3['ket_kategori_penerima'];
+                        $bentuk_penyerahan = $b3['ket_bentuk_penyerahan'];
+                    } else {
+                        $sumber_dana = "-";
+                        $asnaf = "-";
+                        $bentuk_penyerahan = "-";
+                    }
+                    $ambil_ket_log = $this->logAjuanModel->where(['nomor_ajuan' => $v['nomor_ajuan'], 'status_ajuan' => $v['status_ajuan']])->orderBy('tanggal_log', 'DESC')->first();
+                    $time = Time::parse($v['tgl_diajukan']);
+                    $tgl_diajukan = $time->toLocalizedString('d MMM yyyy');
+                    $tr .= '<tr>
+                                <td class="text-center"><a href="/admin/tindakan/' . $v['nik'] . '/' . $v['nomor_ajuan'] . '">' . $v['nomor_ajuan'] . '</a></td>
+                                <td>' . $tgl_diajukan . '</td>
+                                <td>' . $mustahik . '</td>
+                                <td class="text-center">' . $v['keterangan_status'] . '</td>
+                                <td>' . $v['nilai_disetujui'] . '</td>
+                                <td class="text-center">' . $sumber_dana . '</td>
+                                <td class="text-center">' . $asnaf . '</td>
+                                <td>' . $bentuk_penyerahan . '</td>
+                                <td>' . $ambil_ket_log['catatan_log'] . '</td>
+                            </tr>';
+                }
+            } else {
+                $tr = "<tr><td colspan='8'>Belum ada data ajuan</td></tr>";
+            }
+            $msg = [
+                'tr' => $tr,
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_tr_cari_ajuan()
+    {
+        if ($this->request->isAJAX()) {
+            $nomor_ajuan = $this->request->getPost('nomor_ajuan');
+            $ajuan = $this->ajuanModel->where('nomor_ajuan', $nomor_ajuan)
+                ->join('ad_program', 'tr_ajuan.id_program = ad_program.id_program')
+                ->join('tr_pemohon', 'tr_ajuan.nik = tr_pemohon.nik')
+                ->findAll();
+            $tr = "";
+            foreach ($ajuan as $key => $v) {
+                $time = Time::parse($v['tgl_diajukan']);
+                $tgl_diajukan = $time->toLocalizedString('d MMM yyyy');
+                $tr .= '<tr>
+                                    <td class="text-center">' . $v['nomor_ajuan'] . '</td>
+                                    <td>' . $tgl_diajukan . '</td>
+                                    <td>' . $v['nama_pemohon'] . '</td>
+                                    <td>' . $v['nama_program'] . '</td>
+                                    <td class="text-center py-2"><button class="btn btn-sm btn-primary" type="button" id="pilih_' . $v['nomor_ajuan'] . '" value="' . $v['nomor_ajuan'] . '" onclick="PilihAjuan(this.value)">Pilih</button></td>
+                        </tr>';
+            }
+            $msg = [
+                'tr' => $tr,
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function do_pilih_ajuan_notulensi()
+    {
+        if ($this->request->isAJAX()) {
+            $nomor_ajuan = $this->request->getPost('nomor_ajuan');
+            $idnotulensi = $this->request->getPost('idnotulensi');
+            $simpan = $this->notulensiAjuanModel->simpan($idnotulensi, $nomor_ajuan);
+            if ($simpan == false) {
+                $status = false;
+            } else {
+                $status = true;
+            }
+            $msg = [
+                'status' => $status,
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_modal_edit_agenda_notulensi()
+    {
+        if ($this->request->isAJAX()) {
+            $idagenda = $this->request->getPost('idagenda');
+            $r = $this->notulensiAgendaModel->where('id', $idagenda)->first();
+            $data = [
+                'r_agenda' => $r
+            ];
+            $msg = [
+                'modal'  => view('admin/tambahan/modal_edit_agenda_notulensi', $data)
             ];
             echo json_encode($msg);
         } else {

@@ -73,3 +73,18 @@ function get_dosen_akademik()
     $data =  konek_star(array('token' => $token, 'act' => 'ListDosen'));
     return $data['rows'];
 }
+
+function getNamaHari($date)
+{
+    $daysOfWeek = array(
+        "Sunday" => "Minggu",
+        "Monday" => "Senin",
+        "Tuesday" => "Selasa",
+        "Wednesday" => "Rabu",
+        "Thursday" => "Kamis",
+        "Friday" => "Jumat",
+        "Saturday" => "Sabtu"
+    );
+    $dayName = date('l', strtotime($date));
+    return $daysOfWeek[$dayName];
+}

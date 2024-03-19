@@ -23,9 +23,16 @@ $bulan = array(
                 Buat Notulensi Baru
             </h1>
         </div>
-        <div class="col-auto">
+        <div class="col-6">
+            <?php if (session()->getFlashdata('gagal')) { ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= session()->getFlashdata('gagal'); ?>
+                </div>
+            <?php } ?>
         </div>
     </div>
+    <?= form_open("/admin/simpan_init_notulensi", ['class' => 'form_biodata col-md-9']); ?>
+    <?= csrf_field(); ?>
     <div class="container">
         <div class="row">
             <div class="col-md-4">
@@ -33,7 +40,7 @@ $bulan = array(
             </div>
             <div class="col-md-6">
                 <div class="form-group has-danger">
-                    <input type="date" class="form-control col-sm-12  border-left-info animated--grow-in" name="nama_lembaga" id="namaLbg" value="">
+                    <input type="date" class="form-control col-sm-12  border-left-info animated--grow-in" name="tgl_rapat" id="namaLbg" value="" required>
                     <p class="text-danger text-sm error_nama_lembaga"><i></i></p>
                 </div>
             </div>
@@ -44,7 +51,7 @@ $bulan = array(
             </div>
             <div class="col-md-6">
                 <div class="form-group has-danger">
-                    <input type="time" class="form-control col-sm-12  border-left-info animated--grow-in" name="nama_lembaga" id="namaLbg" value="">
+                    <input type="time" class="form-control col-sm-12  border-left-info animated--grow-in" name="jam_mulai" id="namaLbg" value="" required>
                     <p class="text-danger text-sm error_nama_lembaga"><i></i></p>
                 </div>
             </div>
@@ -55,7 +62,7 @@ $bulan = array(
             </div>
             <div class="col-md-6">
                 <div class="form-group has-danger">
-                    <input type="text" class="form-control col-sm-12  border-left-info animated--grow-in" name="nama_lembaga" id="namaLbg" value="">
+                    <input type="text" class="form-control col-sm-12  border-left-info animated--grow-in" name="pemimpin_rapat" id="namaLbg" value="" required>
                     <p class="text-danger text-sm error_nama_lembaga"><i></i></p>
                 </div>
             </div>
@@ -63,10 +70,11 @@ $bulan = array(
         <hr>
         <div class="row">
             <div class="col-12">
-                <a href="/admin/detail_notulensi" class="btn btn-sm btn-warning"><i class="fa fa-save"></i> | Simpan</a>
+                <button type="submit" class="btn btn-sm btn-warning text-dark"><i class="fa fa-save"></i> | Simpan</button>
             </div>
         </div>
     </div>
+    <?= form_close(); ?>
 
 </div>
 

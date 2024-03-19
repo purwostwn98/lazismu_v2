@@ -31,9 +31,14 @@ $bulan = array(
         </div>
     </div>
     <div class="container">
-        <div class="row">
-            <div class="col-12">
+        <div class="row justify-content-between">
+            <div class="col-6">
                 <span style="font-size: 14px;">Notulensi Tahun 2024</span>
+            </div>
+            <div class="col-6">
+                <p class="text-right">
+                    <a href="/admin/formulir_notulensi" class="btn btn-sm btn-primary">Buat Notulensi</a>
+                </p>
             </div>
         </div>
         <div class="row">
@@ -41,17 +46,32 @@ $bulan = array(
                 <table style="font-size: 12px;" class="table table-stripped">
                     <thead class="bgc-dark text-white">
                         <th>No</th>
-                        <th>Hari</th>
                         <th>Tanggal</th>
                         <th>Jam mulai</th>
                         <th>Jam selesai</th>
                         <th>Pemimpin Rapat</th>
-                        <th>Peserta</th>
-                        <th>Agenda</th>
                         <th>#</th>
                     </thead>
                     <tbody>
-                        <td>1</td>
+                        <?php foreach ($notulensi as $key => $value) { ?>
+                            <tr>
+                                <td><?= $key + 1; ?></td>
+                                <td><?= $value['tgl_rapat']; ?></td>
+                                <td><?= $value['jam_mulai']; ?></td>
+                                <td><?= $value['jam_selesai']; ?></td>
+                                <td><?= $value['pemimpin_rapat']; ?></td>
+                                <!-- <td>10</td>
+                        <td>
+                            <ol>
+                                <li>Proposal Masuk</li>
+                                <li>Studi Tiru</li>
+                                <li>Beras UMS</li>
+                            </ol>
+                        </td> -->
+                                <td><a class="btn btn-info btn-sm" href="/admin/detail_notulensi?idnotulensi=<?= $value['id']; ?>">detail</a></td>
+                            </tr>
+                        <?php  } ?>
+                        <!-- <td>1</td>
                         <td>Jumat</td>
                         <td>19 Januari 2024</td>
                         <td>10.20 WIB</td>
@@ -65,19 +85,13 @@ $bulan = array(
                                 <li>Beras UMS</li>
                             </ol>
                         </td>
-                        <td><button class="btn btn-info btn-sm">detail</button></td>
+                        <td><button class="btn btn-info btn-sm">detail</button></td> -->
                     </tbody>
                 </table>
             </div>
         </div>
         <hr>
-        <div class="row">
-            <div class="col-12">
-                <a href="/admin/formulir_notulensi" class="btn btn-sm btn-primary">Buat Notulensi</a>
-            </div>
-        </div>
     </div>
-
 </div>
 
 

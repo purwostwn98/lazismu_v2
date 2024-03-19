@@ -30,6 +30,17 @@ $bulan = array(
         </div>
     </div>
 
+    <!-- //alert  -->
+    <div class="row">
+        <div class="col-9">
+            <?php if ($session->getFlashdata('berhasil')) { ?>
+                <div class="alert alert-success" role="alert">
+                    <?= $session->getFlashdata('berhasil'); ?>
+                </div>
+            <?php  } ?>
+        </div>
+    </div>
+
     <!-- Biodata Pemohon -->
     <div class="card shadow mb-4">
         <div class="card-header d-sm-flex align-items-center justify-content-between bgc-primary py-3">
@@ -308,6 +319,17 @@ $bulan = array(
                             </div>
                             <div class="col-md-8">
                                 <?= $data_individu['kelamin_mustahik']; ?>
+                            </div>
+                        </div>
+                        <hr class="m-0 p-1">
+                        <div class="row bg-white darker">
+                            <div class="col-md-4">
+                                <label for="">
+                                    <b>Tempat, Tgl. Lahir</b>
+                                </label>
+                            </div>
+                            <div class="col-md-8">
+                                <?= $data_individu['tempat_lahir'] . ', ' . $data_individu['tgl_lahir']; ?>
                             </div>
                         </div>
                         <hr class="m-0 p-1">
@@ -600,8 +622,9 @@ $bulan = array(
     <div class="card shadow mb-4">
         <div class="card-header d-sm-flex align-items-center justify-content-between bgc-secondary py-3">
             <h6 class="m-0 font-weight-bold text-white">Form B3</h6>
-            <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#b3Modal">
-                <i class="fa fa-plus text-110 mr-1"></i> Isi form B3
+            <!-- <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#b3Modal"> -->
+            <button type="button" class="btn btn-primary waves-effect waves-light" onclick="loadModalB3('<?= $ajuan['nomor_ajuan']; ?>')">
+                <i class="fa fa-plus text-110 mr-1"></i> <?= (empty($data_b3)) ? "Isi form B3" : "Edit form B3"; ?>
             </button>
         </div>
         <div class="card-body" style="font-size: 13px;">
@@ -616,9 +639,19 @@ $bulan = array(
                             </tr>
                         </thead>
                         <tbody>
-                            <td>Zakat</td>
-                            <td>Fakir</td>
-                            <td>Uang Tunai</td>
+                            <?php if (empty($data_b3)) { ?>
+                                <tr>
+                                    <td>#</td>
+                                    <td>Belum ada data B3</td>
+                                    <td>-</td>
+                                </tr>
+                            <?php } else { ?>
+                                <tr>
+                                    <td class="text-center"><?= $data_b3['dana_dari']; ?></td>
+                                    <td class="text-center"><?= $data_b3['ket_kategori_penerima']; ?></td>
+                                    <td class="text-center"><?= $data_b3['ket_bentuk_penyerahan']; ?></td>
+                                </tr>
+                            <?php   } ?>
                         </tbody>
                     </table>
                 </div><!-- /.col -->
@@ -941,72 +974,6 @@ $bulan = array(
     </div>
 </div>
 
-<!-- B3 modal -->
-<div class="modal fade modal-lg" id="b3Modal" tabindex="-1" role="dialog" aria-labelledby="b3ModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bgc-info">
-                <h5 class="modal-title" id="b3ModalLabel">Form B3</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <?= form_open("/admin/b3", ['class' => 'formulir_surat_tugas']); ?>
-            <?= csrf_field(); ?>
-            <input type="hidden" name="nomor_ajuan" id="" value="<?= $ajuan['nomor_ajuan']; ?>">
-            <div class="modal-body">
-                <div class="form-group row">
-                    <div class="col-sm-5 col-form-label text-sm-left pr-0">
-                        <label for="id-form-field-1" class="mb-0">Dana dari</label>
-                    </div>
-                    <div class="col-sm-7">
-                        <select name="dana_dari" class="form-control dana_dari" id="form-field-select-1" required>
-                            <option value="" selected disabled></option>
-                            <option value="Zakat">Zakat</option>
-                            <option value="Infaq Umum">Infaq Umum</option>
-                            <option value="Amil">Amil</option>
-                            <option value="Infaq Terikat">Infaq Terikat</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <div class="col-sm-5 col-form-label text-sm-left pr-0">
-                        <label for="id-form-field-1" class="mb-0">Kategori Penerima/Asnaf</label>
-                    </div>
-                    <div class="col-sm-7 kategori_penerima">
-                        <select name="kategori_penerima" class="form-control" id="form-field-select-1" required>
-                            <option value="" selected disabled></option>
-                            <option value="" selected disabled>Pilih dana dari terlebih dahulu</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-5 col-form-label text-sm-left pr-0">
-                        <label for="id-form-field-1" class="mb-0">Bentuk Penyerahan</label>
-                    </div>
-                    <div class="col-sm-7">
-                        <select name="bentuk_penyerahan" class="form-control bentuk_penyerahan" id="form-field-select-1">
-                            <option value="" selected disabled></option>
-                            <?php foreach ($bentuk_bantuan as $bentuk) { ?>
-                                <option value="<?= $bentuk['id_bentuk_penyerahan']; ?>"><?= $bentuk['ket_bentuk_penyerahan']; ?></option>
-                            <?php } ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="ket_bentuk">
-
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary btn_st">Simpan Surat Tugas</button>
-            </div>
-            <?= form_close(); ?>
-        </div>
-    </div>
-</div>
-
 <!-- Modal Form Berita Acara -->
 <div class="modal fade" id="beritaacaraModal" tabindex="-1" role="dialog" aria-labelledby="beritaAcaraModal" aria-hidden="true">
     <div class="modal-dialog modal-md" role="document">
@@ -1062,12 +1029,21 @@ $bulan = array(
                         <label for="id-form-field-1" class="mb-0">Bentuk Penyerahan</label>
                     </div>
                     <div class="col-sm-7">
-                        <select name="bentuk_penyerahan" class="form-control bentuk_penyerahan" id="form-field-select-1">
-                            <option value="" selected disabled></option>
-                            <?php foreach ($bentuk_bantuan as $bentuk) { ?>
-                                <option value="<?= $bentuk['id_bentuk_penyerahan']; ?>"><?= $bentuk['ket_bentuk_penyerahan']; ?></option>
-                            <?php } ?>
-                        </select>
+                        <?php if (empty($data_b3)) { ?>
+                            <select name="bentuk_penyerahan" class="form-control bentuk_penyerahan" id="btk_penyerahan">
+                                <option value="" selected disabled></option>
+                                <?php foreach ($bentuk_bantuan as $bentuk) { ?>
+                                    <option value="<?= $bentuk['id_bentuk_penyerahan']; ?>"><?= $bentuk['ket_bentuk_penyerahan']; ?></option>
+                                <?php } ?>
+                            </select>
+                        <?php } else { ?>
+                            <select name="__" class="form-control bentuk_penyerahan" id="btk_penyerahan" disabled>
+                                <?php foreach ($bentuk_bantuan as $bentuk) { ?>
+                                    <option <?= ($data_b3['bentuk_penyerahan'] == $bentuk['id_bentuk_penyerahan']) ? "selected" : ""; ?> value="<?= $bentuk['id_bentuk_penyerahan']; ?>"><?= $bentuk['ket_bentuk_penyerahan']; ?></option>
+                                <?php } ?>
+                            </select>
+                            <input type="hidden" name="bentuk_penyerahan" id="" value="<?= $data_b3['bentuk_penyerahan']; ?>">
+                        <?php } ?>
                     </div>
                 </div>
                 <div class="ket_bentuk">
@@ -1078,14 +1054,25 @@ $bulan = array(
                         <label for="id-form-field-1" class="mb-0">Dana dari</label>
                     </div>
                     <div class="col-sm-7">
-                        <select name="dana_dari" class="form-control dana_dari" id="dndr" required>
-                            <option value="" selected disabled></option>
-                            <option value="Zakat">Zakat</option>
-                            <option value="Infaq Umum">Infaq Umum</option>
-                            <option value="Amil">Amil</option>
-                            <option value="Infaq Terikat">Infaq Terikat</option>
-                            <option value="DSKL">DSKL</option>
-                        </select>
+                        <?php if (empty($data_b3)) { ?>
+                            <select name="dana_dari" class="form-control dana_dari" id="dndr" required>
+                                <option value="" selected disabled></option>
+                                <option value="Zakat">Zakat</option>
+                                <option value="Infaq Umum">Infaq Umum</option>
+                                <option value="Amil">Amil</option>
+                                <option value="Infaq Terikat">Infaq Terikat</option>
+                                <option value="DSKL">DSKL</option>
+                            </select>
+                        <?php } else { ?>
+                            <select name="_" class="form-control dana_dari" id="dndr" required disabled>
+                                <option <?= ($data_b3['dana_dari'] == 'Zakat') ? "selected" : ""; ?> value="Zakat">Zakat</option>
+                                <option <?= ($data_b3['dana_dari'] == 'Infaq Umum') ? "selected" : ""; ?> value="Infaq Umum">Infaq Umum</option>
+                                <option <?= ($data_b3['dana_dari'] == 'Amil') ? "selected" : ""; ?> value="Amil">Amil</option>
+                                <option <?= ($data_b3['dana_dari'] == 'Infaq Terikat') ? "selected" : ""; ?> value="Infaq Terikat">Infaq Terikat</option>
+                                <option <?= ($data_b3['dana_dari'] == 'DSKL') ? "selected" : ""; ?> value="DSKL">DSKL</option>
+                            </select>
+                            <input type="hidden" name="dana_dari" id="" value="<?= $data_b3['dana_dari']; ?>">
+                        <?php  } ?>
                     </div>
                 </div>
                 <div class="form-group row">
@@ -1093,10 +1080,17 @@ $bulan = array(
                         <label for="id-form-field-1" class="mb-0">Kategori Penerima</label>
                     </div>
                     <div class="col-sm-7 kategori_penerima">
-                        <select name="kategori_penerima" class="form-control" id="form-field-select-1" required>
-                            <option value="" selected disabled></option>
-                            <option value="" selected disabled>Pilih dana dari terlebih dahulu</option>
-                        </select>
+                        <?php if (empty($data_b3)) { ?>
+                            <select name="kategori_penerima" class="form-control" id="form-field-select-1" required>
+                                <option value="" selected disabled></option>
+                                <option value="" selected disabled>Pilih dana dari terlebih dahulu</option>
+                            </select>
+                        <?php } else { ?>
+                            <select name="_" class="form-control" id="form-field-select-1" required disabled>
+                                <option value="<?= $data_b3['id_kategori_penerima']; ?>" selected><?= $data_b3['ket_kategori_penerima']; ?></option>
+                            </select>
+                            <input type="hidden" name="kategori_penerima" id="" value="<?= $data_b3['id_kategori_penerima']; ?>">
+                        <?php } ?>
                     </div>
                 </div>
                 <div class="form-group row">
@@ -1158,6 +1152,7 @@ $bulan = array(
 <div class="modal_deskripsi"></div>
 <div class="modal_form_mustahik"></div>
 <div class="modal_edit_mustahik"></div>
+<div class="modal_b3"></div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
     function tindakan(params) {
@@ -1217,6 +1212,26 @@ $bulan = array(
 
 <script>
     $(document).ready(function() {
+        var bentuk_penyerahan = $("#btk_penyerahan").val();
+        // jika bentuk penyerahan tidak kosong
+        if (bentuk_penyerahan != "") {
+            $.ajax({
+                url: "<?= site_url('dynamic/load_ket_penyerahan'); ?>",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    bentuk: bentuk_penyerahan
+                },
+                success: function(response) {
+                    console.log(response);
+                    $('.ket_bentuk').html(response.data);
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                }
+            });
+        }
+
         $('.formulir_tindakan').submit(function(e) {
             e.preventDefault();
             var status = $('.ini_status option:selected').text();
@@ -1425,6 +1440,8 @@ $bulan = array(
             });
             return false;
         });
+
+
     });
 </script>
 
@@ -1918,6 +1935,35 @@ $bulan = array(
             }
         });
     }
+</script>
+
+<script>
+    function loadModalB3(noajuan) {
+        $.ajax({
+            url: "<?= site_url('dynamic/load_modal_b3'); ?>",
+            type: "POST",
+            dataType: "json",
+            data: {
+                noajuan: noajuan
+            },
+            success: function(response) {
+                $('.modal_b3').html(response.data);
+                $('#b3Modal').modal('show');
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+            }
+        });
+    }
+</script>
+
+<script>
+    //Menghilangkan Alert
+    window.setTimeout(function() {
+        $('.alert').fadeTo(500, 0).slideUp(500, function() {
+            $('#peringatan').css('display', 'none');
+        });
+    }, 10000);
 </script>
 
 <?= $this->endSection(); ?>

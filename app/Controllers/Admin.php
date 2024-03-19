@@ -17,6 +17,7 @@ use App\Models\DelegasiModel;
 use App\Models\Berita_acaraModel;
 use App\Models\BentukpenyerahanModel;
 use App\Models\DokumentasiModel;
+use App\Models\FormB3Model;
 use App\Models\ProgramModel;
 use App\Models\PilarModel;
 use App\Models\KategoriModel;
@@ -26,6 +27,8 @@ use App\Models\SyaratModel;
 use App\Models\UsersModel;
 use App\Models\IndividuModel;
 use App\Models\MuzakiModel;
+use App\Models\NotulensiModel;
+use App\Models\NotulensiAgendaModel;
 use App\Models\PenghimpunanKtgModel;
 use App\Models\PenghimpunanSubktgModel;
 use CodeIgniter\I18n\Time;
@@ -62,6 +65,9 @@ class Admin extends BaseController
     protected $penghimpunanModel;
     protected $penghimpunanKtgModel;
     protected $penghimpunanSubktgModel;
+    protected $formB3Model;
+    protected $notulensiModel;
+    protected $notulensiAgendaModel;
 
     public function __construct()
     {
@@ -91,6 +97,9 @@ class Admin extends BaseController
         $this->kuitansiModel = new KuitansiModel();
         $this->individuModel = new IndividuModel();
         $this->muzakiModel = new MuzakiModel();
+        $this->formB3Model = new FormB3Model();
+        $this->notulensiModel = new NotulensiModel();
+        $this->notulensiAgendaModel = new NotulensiAgendaModel();
         $this->bulan = array(
             1 =>   'Januari',
             'Februari',
@@ -611,7 +620,10 @@ class Admin extends BaseController
             'bentuk_bantuan' => $this->bentukbantuanModel->findAll(),
             'dokumentasi' => $dokumentasi,
             'kuitansi' => $kuitansi,
-            'data_individu' => $data_individu
+            'data_individu' => $data_individu,
+            'data_b3' => $this->formB3Model->where('nomor_ajuan', $nomor_ajuan)
+                ->join('dt_kategori_penerima as ktg', 'tr_form_b3.kategori_penerima = ktg.id_kategori_penerima')
+                ->join('dt_bentuk_penyerahan as s', 'tr_form_b3.bentuk_penyerahan = s.id_bentuk_penyerahan')->first()
         ];
         return view('admin/tindakan_ajuan', $data);
     }
@@ -624,9 +636,8 @@ class Admin extends BaseController
         $valid = [
             'file_ktp' => [
                 'label' => 'File KTP',
-                'rules' => 'uploaded[file_ktp]|max_size[file_ktp,4096]|ext_in[file_ktp,pdf,jpeg,jpg,png]|mime_in[file_ktp,application/pdf,image/jpeg,image/jpg,image/png]',
+                'rules' => 'max_size[file_ktp,4096]|ext_in[file_ktp,pdf,jpeg,jpg,png]|mime_in[file_ktp,application/pdf,image/jpeg,image/jpg,image/png]',
                 'errors' => [
-                    'uploaded' => '{field} tidak boleh kosong',
                     'max_size' => 'Mohon maaf, ukuran {field} tidak boleh melebihi 4MB',
                     'ext_in' => 'Mohon maaf, semua {field} harus dalam format pdf/jpg/jpeg/png',
                     'mime_in' => 'Mohon maaf, {field} harus dalam format pdf/jpg/jpeg/png',
@@ -634,9 +645,8 @@ class Admin extends BaseController
             ],
             'file_kk' => [
                 'label' => 'File KK',
-                'rules' => 'uploaded[file_kk]|max_size[file_kk,4096]|ext_in[file_kk,pdf,jpeg,jpg,png]|mime_in[file_kk,application/pdf,image/jpeg,image/jpg,image/png]',
+                'rules' => 'max_size[file_kk,4096]|ext_in[file_kk,pdf,jpeg,jpg,png]|mime_in[file_kk,application/pdf,image/jpeg,image/jpg,image/png]',
                 'errors' => [
-                    'uploaded' => '{field} tidak boleh kosong',
                     'max_size' => 'Mohon maaf, ukuran {field} tidak boleh melebihi 4MB',
                     'ext_in' => 'Mohon maaf, semua {field} harus dalam format pdf/jpg/jpeg/png',
                     'mime_in' => 'Mohon maaf, {field} harus dalam format pdf/jpg/jpeg/png',
@@ -650,14 +660,22 @@ class Admin extends BaseController
         } else {
             $nik = $this->request->getPost('nik_mustahik');
             //file ktp
-            $foto_ktp = $this->request->getFile('file_ktp');
-            $namaFileKTP = $foto_ktp->getRandomName();
-            $foto_ktp->move('file_ktp', $namaFileKTP);
+            if (isset($_POST['file_ktp'])) {
+                $foto_ktp = $this->request->getFile('file_ktp');
+                $namaFileKTP = $foto_ktp->getRandomName();
+                $foto_ktp->move('file_ktp', $namaFileKTP);
+            } else {
+                $namaFileKTP = $this->request->getPost('nama_file_ktp_old');
+            }
             // KK
             $no_kk = $this->request->getPost('no_kk');
-            $foto_kk = $this->request->getFile('file_kk');
-            $namaFileKK = $foto_kk->getRandomName();
-            $foto_kk->move('file_kk', $namaFileKK);
+            if (isset($_POST['file_kk'])) {
+                $foto_kk = $this->request->getFile('file_kk');
+                $namaFileKK = $foto_kk->getRandomName();
+                $foto_kk->move('file_kk', $namaFileKK);
+            } else {
+                $namaFileKK = $this->request->getPost('nama_file_kk_old');
+            }
 
             $nama_lengkap = $this->request->getPost('nama');
             $jenkel = $this->request->getPost('jenkel');
@@ -1346,7 +1364,7 @@ class Admin extends BaseController
     }
 
 
-    function pdf_form_c1($id_berita_acara, $nomor_ajuan)
+    public function pdf_form_c1($id_berita_acara, $nomor_ajuan)
     {
         $berita_acara = $this->berita_acaraModel->where('id_berita_acara', $id_berita_acara)
             ->join('dt_kategori_penerima as ktg', 'ktg.id_kategori_penerima = ad_berita_acara.kategori_penerima')
@@ -1423,7 +1441,7 @@ class Admin extends BaseController
         // return redirect()->to('/admin/lihat_surat_tugas/');
     }
 
-    function pdf_c17_kwitansi($id_berita_acara, $nomor_ajuan)
+    public function pdf_c17_kwitansi($id_berita_acara, $nomor_ajuan)
     {
         $berita_acara = $this->berita_acaraModel->where('id_berita_acara', $id_berita_acara)
             ->join('dt_kategori_penerima as ktg', 'ktg.id_kategori_penerima = ad_berita_acara.kategori_penerima')
@@ -2415,8 +2433,10 @@ class Admin extends BaseController
 
     public function v_notulensi_rapat()
     {
+        $notulensi = $this->notulensiModel->findAll();
         $data = [
             'halaman' => 'notulensi_rapat',
+            'notulensi' => $notulensi
         ];
         return view('/admin/notulensi_rapat', $data);
     }
@@ -2426,14 +2446,6 @@ class Admin extends BaseController
             'halaman' => 'notulensi_rapat',
         ];
         return view('/admin/form_notulensi', $data);
-    }
-
-    public function detail_notulensi()
-    {
-        $data = [
-            'halaman' => 'notulensi_rapat',
-        ];
-        return view('/admin/detail_notulensi', $data);
     }
 
     public function v_penghimpunan()
@@ -2800,5 +2812,107 @@ class Admin extends BaseController
         $writer->setIncludeCharts(true);
         $writer->save('php://output');
         exit();
+    }
+
+    public function do_simpan_b3()
+    {
+        $nomor_ajuan = $this->request->getVar('nomor_ajuan');
+        $dana_dari = $this->request->getPost('dana_dari');
+        $kategori_penerima = $this->request->getPost('kategori_penerima');
+        $bentuk_penyerahan = $this->request->getPost('bentuk_penyerahan');
+        $data_ajuan = $this->ajuanModel->where('nomor_ajuan', $nomor_ajuan)->first();
+
+        $cek = $this->formB3Model->where('nomor_ajuan', $nomor_ajuan)->first();
+        if (empty($cek)) {
+            $this->formB3Model->simpan($nomor_ajuan, $dana_dari, $kategori_penerima, $bentuk_penyerahan);
+            $this->session->setFlashdata('berhasil', "Data B3 berhasil disimpan!");
+        } else {
+            $this->formB3Model->edit($nomor_ajuan, $dana_dari, $kategori_penerima, $bentuk_penyerahan);
+            $this->session->setFlashdata('berhasil', "Data B3 berhasil diperbarui!");
+        }
+
+        return redirect()->to('/admin/tindakan/' . $data_ajuan['nik'] . '/' . $nomor_ajuan);
+    }
+
+    public function simpan_init_notulensi()
+    {
+        if (isset($_POST['tgl_rapat'])) {
+            $tgl_rapat = $this->request->getPost('tgl_rapat');
+            $jam_mulai = $this->request->getPost('jam_mulai');
+            $pemimpin_rapat = $this->request->getPost('pemimpin_rapat');
+            $simpan = $this->notulensiModel->simpan($tgl_rapat, $jam_mulai, $pemimpin_rapat);
+            if ($simpan == false) {
+                $this->session->setFlashdata('gagal', 'Data notulensi gagal tersimpan!');
+                return redirect()->to('/admin/formulir_notulensi')->withInput();
+            } else {
+                $this->session->setFlashdata('berhasil', 'Data notulensi berhasil tersimpan!');
+                return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $simpan)->withInput();
+            }
+        }
+    }
+
+    public function detail_notulensi()
+    {
+        $idnotulensi = $this->request->getVar('idnotulensi');
+        $r_notulensi = $this->notulensiModel->where('id', $idnotulensi)->first();
+        $time = Time::parse($r_notulensi['tgl_rapat']);
+        $tanggal_mulai = $time->toLocalizedString('d MMM yyyy');
+        $nama_hari = getNamaHari($time);
+        $agenda_notulensi = $this->notulensiAgendaModel->where('idnotulensi', $idnotulensi)->findAll();
+        $data = [
+            'halaman' => 'notulensi_rapat',
+            'r_notulensi' => $r_notulensi,
+            'tgl_mulai' => $tanggal_mulai,
+            'nama_hari' => $nama_hari,
+            'agenda' => $agenda_notulensi
+        ];
+        return view('/admin/detail_notulensi', $data);
+    }
+
+    public function do_simpan_agenda()
+    {
+        $idnotulensi = intval($this->request->getVar('idnotulensi'));
+        $nama_agenda = $this->request->getVar('nama_agenda');
+        $catatan_agenda = $this->request->getVar('catatan_agenda');
+
+        $simpan = $this->notulensiAgendaModel->simpan($idnotulensi, $nama_agenda, $catatan_agenda);
+        if ($simpan == false) {
+            $this->session->setFlashdata('gagal', "Gagal simpan agenda rapat!");
+        } else {
+            $this->session->setFlashdata('berhasil', "Berhasil simpan agenda rapat!");
+        }
+        return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $idnotulensi);
+    }
+
+    public function do_simpan_edit_agenda()
+    {
+        $idnotulensi = intval($this->request->getVar('idnotulensi'));
+        $idagenda = intval($this->request->getVar('idagenda'));
+        $nama_agenda = $this->request->getVar('nama_agenda');
+        $catatan_agenda = $this->request->getVar('catatan_agenda');
+
+        $simpan = $this->notulensiAgendaModel->edit($idagenda, $nama_agenda, $catatan_agenda);
+        if ($simpan == false) {
+            $this->session->setFlashdata('gagal', "Gagal simpan agenda rapat!");
+        } else {
+            $this->session->setFlashdata('berhasil', "Berhasil edit agenda rapat!");
+        }
+        return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $idnotulensi);
+    }
+
+    public function do_simpan_update_notulensi()
+    {
+        $idnotulensi = intval($this->request->getPost('idnotulensi'));
+        $jam_selesai = $this->request->getPost('jam_selesai');
+        $notulen = $this->request->getPost('notulen');
+        $catatan_notulensi = $this->request->getPost('catatan_notulensi');
+
+        $simpan = $this->notulensiModel->edit($idnotulensi, $jam_selesai, $notulen, $catatan_notulensi);
+        if ($simpan == false) {
+            $this->session->setFlashdata('gagal', "Gagal simpan notulensi rapat!");
+        } else {
+            $this->session->setFlashdata('berhasil', "Berhasil edit notulensi rapat!");
+        }
+        return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $idnotulensi);
     }
 }

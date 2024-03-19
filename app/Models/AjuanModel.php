@@ -330,3 +330,58 @@ class KuitansiModel extends Model
         }
     }
 }
+
+class FormB3Model extends Model
+{
+    protected $table      = 'tr_form_b3';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+        'nomor_ajuan', 'dana_dari', 'kategori_penerima', 'bentuk_penyerahan'
+    ];
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    function simpan($nomor_ajuan, $dana_dari, $kategori_penerima, $bentuk_penyerahan)
+    {
+        $dt = [
+            'nomor_ajuan' => $nomor_ajuan,
+            'dana_dari' => $dana_dari,
+            'kategori_penerima' => $kategori_penerima,
+            'bentuk_penyerahan' => $bentuk_penyerahan
+        ];
+
+        $this->transBegin();
+        $this->insert($dt);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = false;
+        } else {
+            $this->transCommit();
+            $msg = $this->getInsertID();
+        }
+        return $msg;
+    }
+
+    function edit($nomor_ajuan, $dana_dari, $kategori_penerima, $bentuk_penyerahan)
+    {
+        $r = $this->where('nomor_ajuan', $nomor_ajuan)->first();
+        $id = $r['id'];
+        $dt = [
+            'dana_dari' => $dana_dari,
+            'kategori_penerima' => $kategori_penerima,
+            'bentuk_penyerahan' => $bentuk_penyerahan
+        ];
+
+        $this->transBegin();
+        $this->update($id, $dt);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = 0;
+        } else {
+            $this->transCommit();
+            $msg = 1;
+        }
+        return $msg;
+    }
+}
