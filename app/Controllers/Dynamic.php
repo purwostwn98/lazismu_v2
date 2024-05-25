@@ -671,6 +671,7 @@ class Dynamic extends BaseController
                     $time = Time::parse($v['tgl_diajukan']);
                     $tgl_diajukan = $time->toLocalizedString('d MMM yyyy');
                     $tr .= '<tr>
+                                <td class="text-center"><button class="btn btn-sm btn-danger" value="' . $v['id'] . '" onclick="hapusAjuan(this.value)"><i class="fa fa-trash"></i></button></td>
                                 <td class="text-center"><a href="/admin/tindakan/' . $v['nik'] . '/' . $v['nomor_ajuan'] . '">' . $v['nomor_ajuan'] . '</a></td>
                                 <td>' . $tgl_diajukan . '</td>
                                 <td>' . $mustahik . '</td>

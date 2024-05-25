@@ -68,7 +68,7 @@ $bulan = array(
                                 <li>Beras UMS</li>
                             </ol>
                         </td> -->
-                                <td><a class="btn btn-info btn-sm" href="/admin/detail_notulensi?idnotulensi=<?= $value['id']; ?>">detail</a></td>
+                                <td><a class="btn btn-info btn-sm" href="/admin/detail_notulensi?idnotulensi=<?= $value['id']; ?>">detail</a> | <button class="btn btn-danger btn-sm" onclick="hapusNotulensi('<?= $value['id']; ?>')"><i class="fa fa-trash"></i></button></td>
                             </tr>
                         <?php  } ?>
                         <!-- <td>1</td>
@@ -94,5 +94,70 @@ $bulan = array(
     </div>
 </div>
 
+<input type="hidden" class="csrf_input" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
+<script>
+    function hapusNotulensi(idnotulensi) {
+        Swal.fire({
+                title: 'Are you sure?',
+                html: "Anda yakin menghapus notulensi ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Hapus!'
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    var csrfName = $('.csrf_input').attr('name'); // CSRF Token name
+                    var csrfHash = $('.csrf_input').val(); // CSRF hash
+                    $.ajax({
+                        type: "post",
+                        url: "<?= site_url('admin/hapus_notulensi'); ?>",
+                        data: {
+                            id: idnotulensi,
+                            [csrfName]: csrfHash
+                        },
+                        dataType: "json",
+                        beforeSend: function() {},
+                        complete: function() {
+
+                        },
+                        success: function(response) {
+                            if (response.status == 'berhasil') {
+                                Swal.fire({
+                                    title: 'Berhasil',
+                                    text: response.pesan,
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal',
+                                    text: response.pesan,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    });
+                    return false;
+                } else {
+                    return false;
+                }
+            });
+    }
+</script>
 <?= $this->endSection(); ?>

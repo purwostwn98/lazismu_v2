@@ -91,6 +91,7 @@ $bulan = array(
                                 <table id="simple-table" class="table table-bordered table-bordered-x table-responsive text-dark-m2">
                                     <thead class="text-dark-m3 bgc-grey-l4">
                                         <tr>
+                                            <th class="text-center">#</th>
                                             <th class="text-center">No Ajuan</th>
                                             <th class="text-center">Tgl Ajaun</th>
                                             <th class="text-center">Mustahik</th>
@@ -134,9 +135,12 @@ $bulan = array(
                         <div class="card shadow mb-2">
                             <div class="card-header d-sm-flex align-items-center justify-content-between bgc-secondary">
                                 <h6 class="m-0 font-weight-bold text-white p-0"><?= $key + 2 . ". " . $v['nama_agenda']; ?></h6>
-                                <button type="button" class="btn btn-warning btn-sm waves-effect waves-light" onclick="editAgenda('<?= $v['id']; ?>')">
-                                    <i class="fa fa-edit text-110 mr-1 p-0"></i> Edit Agenda
-                                </button>
+                                <div class="div">
+                                    <button type="button" class="btn btn-warning btn-sm waves-effect waves-light" onclick="editAgenda('<?= $v['id']; ?>')">
+                                        <i class="fa fa-edit text-110 mr-1 p-0"></i> Edit Agenda
+                                    </button>
+                                    <button class="btn btn-danger btn-sm waves-effect waves-light" onclick="hapusAgenda('<?= $v['id']; ?>')"><i class="fa fa-trash text-110 mr-1 p-0"></i></button>
+                                </div>
                             </div>
                             <div class="card-body" style="font-size: 13px;">
                                 <div class="row">
@@ -302,8 +306,8 @@ $bulan = array(
         </div>
     </div>
 </div>
-
 <div class="mdlEditAgend"></div>
+<input type="hidden" class="csrf_input" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
     $(window).on("load", readyFn);
@@ -394,6 +398,68 @@ $bulan = array(
         });
         return false;
     }
+
+    function hapusAjuan(idajuan) {
+        Swal.fire({
+                title: 'Are you sure?',
+                html: "Anda yakin menghapus ajuan ini dari notulensi?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Hapus!'
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    var csrfName = $('.csrf_input').attr('name'); // CSRF Token name
+                    var csrfHash = $('.csrf_input').val(); // CSRF hash
+                    $.ajax({
+                        type: "post",
+                        url: "<?= site_url('admin/hapus_ajuan_notulensi'); ?>",
+                        data: {
+                            idajuan: idajuan,
+                            [csrfName]: csrfHash
+                        },
+                        dataType: "json",
+                        beforeSend: function() {},
+                        complete: function() {
+
+                        },
+                        success: function(response) {
+                            if (response.status == 'berhasil') {
+                                Swal.fire({
+                                    title: 'Berhasil',
+                                    text: response.pesan,
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal',
+                                    text: response.pesan,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    });
+                    return false;
+                } else {
+                    return false;
+                }
+            });
+    }
 </script>
 
 <script>
@@ -417,6 +483,69 @@ $bulan = array(
             }
         });
         return false;
+    }
+
+    function hapusAgenda(idAgenda) {
+        Swal.fire({
+                title: 'Are you sure?',
+                html: "Anda yakin menghapus agenda ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Hapus!'
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    var csrfName = $('.csrf_input').attr('name'); // CSRF Token name
+                    var csrfHash = $('.csrf_input').val(); // CSRF hash
+                    $.ajax({
+                        type: "post",
+                        url: "<?= site_url('admin/hapus_agenda_notulensi'); ?>",
+                        data: {
+                            idagenda: idAgenda,
+                            [csrfName]: csrfHash
+                        },
+                        dataType: "json",
+                        beforeSend: function() {},
+                        complete: function() {
+
+                        },
+                        success: function(response) {
+                            if (response.status == 'berhasil') {
+                                Swal.fire({
+                                    title: 'Berhasil',
+                                    text: response.pesan,
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                                // $("input[name='csrf_test_name']").val(response.error.token);
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal',
+                                    text: response.pesan,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    });
+                    return false;
+                } else {
+                    return false;
+                }
+            });
     }
 </script>
 

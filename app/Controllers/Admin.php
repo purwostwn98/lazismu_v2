@@ -29,6 +29,7 @@ use App\Models\IndividuModel;
 use App\Models\MuzakiModel;
 use App\Models\NotulensiModel;
 use App\Models\NotulensiAgendaModel;
+use App\Models\NotulensiAjuanModel;
 use App\Models\PenghimpunanKtgModel;
 use App\Models\PenghimpunanSubktgModel;
 use CodeIgniter\I18n\Time;
@@ -68,6 +69,7 @@ class Admin extends BaseController
     protected $formB3Model;
     protected $notulensiModel;
     protected $notulensiAgendaModel;
+    protected $notulensiAjaunModel;
 
     public function __construct()
     {
@@ -100,6 +102,7 @@ class Admin extends BaseController
         $this->formB3Model = new FormB3Model();
         $this->notulensiModel = new NotulensiModel();
         $this->notulensiAgendaModel = new NotulensiAgendaModel();
+        $this->notulensiAjaunModel = new NotulensiAjuanModel();
         $this->bulan = array(
             1 =>   'Januari',
             'Februari',
@@ -2884,6 +2887,26 @@ class Admin extends BaseController
         return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $idnotulensi);
     }
 
+    public function hapus_agenda_notulensi()
+    {
+        if (isset($_POST['idagenda'])) {
+            $idagenda = $this->request->getPost('idagenda');
+            $hapus = $this->notulensiAgendaModel->hapus($idagenda);
+            if ($hapus == false) {
+                $status = 'gagal';
+                $pesan = 'Data agenda gagal dihapus!';
+            } else {
+                $status = 'berhasil';
+                $pesan = 'Data agenda berhasil dihapus!';
+            }
+            $msg = [
+                'status' => $status,
+                'pesan' => $pesan
+            ];
+            echo json_encode($msg);
+        }
+    }
+
     public function do_simpan_edit_agenda()
     {
         $idnotulensi = intval($this->request->getVar('idnotulensi'));
@@ -2914,5 +2937,47 @@ class Admin extends BaseController
             $this->session->setFlashdata('berhasil', "Berhasil edit notulensi rapat!");
         }
         return redirect()->to('/admin/detail_notulensi?idnotulensi=' . $idnotulensi);
+    }
+
+    public function hapus_ajuan_notulensi()
+    {
+        if (isset($_POST['idajuan'])) {
+            $id = $this->request->getPost('idajuan');
+            $hapus = $this->notulensiAjaunModel->hapus($id);
+            if ($hapus == false) {
+                $status = 'gagal';
+                $pesan = 'Data ajuan gagal dihapus!';
+            } else {
+                $status = 'berhasil';
+                $pesan = 'Data ajuan berhasil dihapus!';
+            }
+            $msg = [
+                'status' => $status,
+                'pesan' => $pesan
+            ];
+            echo json_encode($msg);
+        }
+    }
+
+    public function hapus_notulensi()
+    {
+        if (isset($_POST['id'])) {
+            $id = $this->request->getPost('id');
+            $hapusAjuanNotulensi = $this->notulensiAjaunModel->where('idnotulensi', $id)->delete();
+            $hapusAgendaNotulensi = $this->notulensiAgendaModel->where('idnotulensi', $id)->delete();
+            $hapus = $this->notulensiModel->hapus($id);
+            if ($hapus == false) {
+                $status = 'gagal';
+                $pesan = 'Data notulensi gagal dihapus!';
+            } else {
+                $status = 'berhasil';
+                $pesan = 'Data notulensi berhasil dihapus!';
+            }
+            $msg = [
+                'status' => $status,
+                'pesan' => $pesan
+            ];
+            echo json_encode($msg);
+        }
     }
 }

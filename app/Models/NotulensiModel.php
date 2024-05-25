@@ -51,6 +51,20 @@ class NotulensiModel extends Model
         }
         return $msg;
     }
+
+    public function hapus($idnotulensi)
+    {
+        $this->transBegin();
+        $this->delete($idnotulensi);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = false;
+        } else {
+            $this->transCommit();
+            $msg = true;
+        }
+        return $msg;
+    }
 }
 
 class NotulensiAjuanModel extends Model
@@ -78,6 +92,20 @@ class NotulensiAjuanModel extends Model
         } else {
             $this->transCommit();
             $msg = $this->getInsertID();
+        }
+        return $msg;
+    }
+
+    public function hapus($idajuan_notulensi)
+    {
+        $this->transBegin();
+        $this->delete($idajuan_notulensi);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = false;
+        } else {
+            $this->transCommit();
+            $msg = true;
         }
         return $msg;
     }
@@ -126,6 +154,20 @@ class NotulensiAgendaModel extends Model
         } else {
             $this->transCommit();
             $msg = $idagenda;
+        }
+        return $msg;
+    }
+
+    public function hapus($idagenda)
+    {
+        $this->transBegin();
+        $this->delete($idagenda);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = false;
+        } else {
+            $this->transCommit();
+            $msg = true;
         }
         return $msg;
     }
