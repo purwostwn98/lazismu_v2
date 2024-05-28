@@ -1521,6 +1521,55 @@ class Admin extends BaseController
         // return redirect()->to('/admin/lihat_surat_tugas/');
     }
 
+    public function pdf_a17_penghimpunan($id_himpun)
+    {
+        $himpun = $this->penghimpunanModel->where('id_himpun', $id_himpun)
+            ->join('dt_muzaki', 'tr_penghimpunan.email_muzaki = dt_muzaki.email_muzaki')
+            ->join('dt_penghimpunan_ktg as ktg', 'tr_penghimpunan.ktg_himpun = ktg.id_ktg')
+            ->join('dt_penghimpunan_subktg as subktg', 'tr_penghimpunan.sub_ktg_himpun = subktg.id_sub_ktg')
+            ->first();
+
+
+        $data = [
+            'halaman' => 'admin',
+            'himpun' => $himpun,
+            'terbilang' => terbilang($himpun['jumlah_himpun'])
+        ];
+
+        $html = view("/admin/pdf/A17_kwitansi_himpunan", $data);
+
+        $pdf = new TCPDF("P", PDF_UNIT, "A4", true, 'UTF-8', false);
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('@purwostwn');
+        $pdf->SetTitle("Kwitansi Himpunan Lazismu UMS");
+        $pdf->SetSubject("Kwitansi Himpunan Lazismu UMS");
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 1, PDF_MARGIN_RIGHT);
+
+        // set auto page breaks
+        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+        // set image scale factor
+        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->addPage();
+
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $this->response->setContentType('application/pdf');
+        $pdf->Output("Kwitansi.pdf", 'I');
+
+        //Close and output PDF document
+        // $pdf->Output(__DIR__ . '/../../../public_html/lydiahidayati.com/uploads/Survey.pdf', 'F');
+        // $message = "<p>Kepada Yth. </p>" . $data['nama'] . "<p>Berikut merupakan tanggapan saudara pada 
+        //     Survei Revealed Preference dan Stated Preferences terhadap pilihan rantai pengangkutan (transport chain) dan ukuran pengiriman (shipment size) untuk pengiriman barang antar wilayah di Indonesia</p>";
+        // $this->email2($message);
+
+        //$this->session->destroy();
+        // return redirect()->to('/admin/lihat_surat_tugas/');
+    }
+
     public function simpan_file_surat_tugas()
     {
         if ($this->request->isAJAX()) {
@@ -2571,6 +2620,87 @@ class Admin extends BaseController
         return view('/admin/penghimpunan/data_muzaki', $data);
     }
 
+    public function do_tambah_muzaki()
+    {
+        $validation = \Config\Services::validation();
+        $valid = [
+            'nama_muzaki' => [
+                'label' => 'Nama Muzaki',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => '{field} tidak boleh kosong'
+                ]
+            ],
+            'email_muzaki' => [
+                'label' => 'Email muzaki',
+                'rules' => 'required|is_unique[dt_muzaki.email_muzaki]',
+                'errors' => [
+                    'required' => '{field} tidak boleh kosong',
+                    'is_unique' => 'Gagal {field} sudah pernah digunakan'
+                ]
+            ]
+        ];
+
+        if (!$this->validate($valid)) {
+            $this->session->setFlashdata('gagal', $validation->getError('email_muzaki'));
+        } else {
+            $nama_muzaki = $this->request->getPost('nama_muzaki');
+            $alamat_muzaki = $this->request->getPost('alamat_muzaki');
+            $tlp_muzaki = $this->request->getPost('tlp_muzaki');
+            $email_muzaki = $this->request->getPost('email_muzaki');
+            $jenis_muzaki = $this->request->getPost('jenis_muzaki');
+            $is_dosen = $this->request->getPost('is_dosen');
+            $query = $this->muzakiModel->simpan($nama_muzaki, $alamat_muzaki, $tlp_muzaki, $email_muzaki, $jenis_muzaki, $is_dosen);
+            if ($query == true) {
+                $this->session->setFlashdata('berhasil', 'Data muzaki berhasil tersimpan!');
+            } else {
+                $this->session->setFlashdata('gagal', 'GAGAL menyimpan data!');
+            }
+        }
+        return redirect()->to('/admin/v_data_muzaki');
+    }
+
+    public function do_edit_muzaki()
+    {
+        $validation = \Config\Services::validation();
+        $id_muzaki = $this->request->getPost('id_muzaki');
+        $valid = [
+            'nama_muzaki' => [
+                'label' => 'Nama Muzaki',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => '{field} tidak boleh kosong'
+                ]
+            ],
+            'email_muzaki' => [
+                'label' => 'Email muzaki',
+                'rules' => 'required|is_unique[dt_muzaki.email_muzaki,id_muzaki,' . $id_muzaki . ']',
+                'errors' => [
+                    'required' => '{field} tidak boleh kosong',
+                    'is_unique' => 'Gagal {field} sudah pernah digunakan'
+                ]
+            ]
+        ];
+
+        if (!$this->validate($valid)) {
+            $this->session->setFlashdata('gagal', $validation->getError('email_muzaki'));
+        } else {
+            $nama_muzaki = $this->request->getPost('nama_muzaki');
+            $alamat_muzaki = $this->request->getPost('alamat_muzaki');
+            $tlp_muzaki = $this->request->getPost('tlp_muzaki');
+            $email_muzaki = $this->request->getPost('email_muzaki');
+            $jenis_muzaki = $this->request->getPost('jenis_muzaki');
+            $is_dosen = $this->request->getPost('is_dosen');
+            $query = $this->muzakiModel->perbarui($id_muzaki, $nama_muzaki, $alamat_muzaki, $tlp_muzaki, $email_muzaki, $jenis_muzaki, $is_dosen);
+            if ($query == true) {
+                $this->session->setFlashdata('berhasil', 'Data muzaki berhasil diperbarui!');
+            } else {
+                $this->session->setFlashdata('gagal', 'GAGAL menyimpan data!');
+            }
+        }
+        return redirect()->to('/admin/v_data_muzaki');
+    }
+
     public function sinkron_dosen()
     {
         $arr_tabel = [];
@@ -2606,6 +2736,7 @@ class Admin extends BaseController
 
     public function do_simpan_himpun_form()
     {
+
         $email_muzaki = $this->request->getPost('email_muzaki');
         $tanggal_himpun = $this->request->getPost('tanggal_himpun');
         $kategori_himpun = $this->request->getPost('kategori_himpun');
@@ -2622,6 +2753,7 @@ class Admin extends BaseController
         } else {
             $this->session->setFlashdata('gagal', 'GAGAL menyimpan data!');
         }
+
         return redirect()->to('/admin/v_penghimpunan');
     }
 
@@ -2815,6 +2947,54 @@ class Admin extends BaseController
         $writer->setIncludeCharts(true);
         $writer->save('php://output');
         exit();
+    }
+
+    public function do_edit_penghimpunan()
+    {
+        $id_himpun = $this->request->getPost('id_himpun');
+        $jumlah_himpun = $this->request->getPost('jumlah_himpun');
+        $tgl_setor_bank = $this->request->getPost('tgl_setor_bank');
+        $kwitansi_bank = $this->request->getPost('kwitansi_bank');
+        $nama_bank = $this->request->getPost('nama_bank');
+
+        $dt = [
+            "jumlah_himpun" => $jumlah_himpun,
+            "tgl_setor_bank" => $tgl_setor_bank,
+            "kwitansi_bank" => $kwitansi_bank,
+            "nm_bank" => $nama_bank
+        ];
+
+
+        $this->penghimpunanModel->transBegin();
+        $this->penghimpunanModel->update($id_himpun, $dt);
+        if ($this->penghimpunanModel->transStatus() === false) {
+            $this->penghimpunanModel->transRollback();
+            $this->session->setFlashdata('gagal', 'GAGAL menyimpan data!');
+        } else {
+            $this->penghimpunanModel->transCommit();
+            $this->session->setFlashdata('berhasil', 'Data penghimpunan berhasil diperbarui!');
+        }
+        return redirect()->to('/admin/v_penghimpunan');
+    }
+
+    public function do_hapus_penghimpunan()
+    {
+        if (isset($_POST['id'])) {
+            $id = $this->request->getPost('id');
+            $hapus = $this->penghimpunanModel->hapus($id);
+            if ($hapus == false) {
+                $status = 'gagal';
+                $pesan = 'Data penghimpunan gagal dihapus!';
+            } else {
+                $status = 'berhasil';
+                $pesan = 'Data penghimpunan berhasil dihapus!';
+            }
+            $msg = [
+                'status' => $status,
+                'pesan' => $pesan
+            ];
+            echo json_encode($msg);
+        }
     }
 
     public function do_simpan_b3()

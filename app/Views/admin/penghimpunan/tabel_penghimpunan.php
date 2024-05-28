@@ -62,7 +62,7 @@ $bulan = array(
         </div>
     </div>
     <div class="row">
-        <div class="col-md-11">
+        <div class="col-md-12">
             <div style="max-width:100%" class="card brc-success-tp2">
                 <div class="p-0 initabel">
 
@@ -71,6 +71,9 @@ $bulan = array(
         </div>
     </div>
 </div>
+<div class="modal-edit"></div>
+
+<input type="hidden" class="csrf_input" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>" />
 <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 
 <script>
@@ -123,6 +126,87 @@ $bulan = array(
             }
         });
         return false;
+    }
+
+    function edit(id) {
+        $.ajax({
+            url: "<?= site_url('dynamic/load_modal_edit_penghimpunan'); ?>",
+            type: "POST",
+            dataType: "json",
+            data: {
+                id: id
+            },
+            success: function(response) {
+                $(".modal-edit").html(response.modal);
+                $("#editModal").modal("show");
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+            }
+        });
+        return false;
+    }
+
+    function hapus(id) {
+        Swal.fire({
+                title: 'Are you sure?',
+                html: "Anda yakin menghapus data himpunan ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Hapus!'
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    var csrfName = $('.csrf_input').attr('name'); // CSRF Token name
+                    var csrfHash = $('.csrf_input').val(); // CSRF hash
+                    $.ajax({
+                        type: "post",
+                        url: "<?= site_url('admin/do_hapus_penghimpunan'); ?>",
+                        data: {
+                            id: id,
+                            [csrfName]: csrfHash
+                        },
+                        dataType: "json",
+                        beforeSend: function() {},
+                        complete: function() {
+
+                        },
+                        success: function(response) {
+                            if (response.status == 'berhasil') {
+                                Swal.fire({
+                                    title: 'Berhasil',
+                                    text: response.pesan,
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal',
+                                    text: response.pesan,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    });
+                    return false;
+                } else {
+                    return false;
+                }
+            });
     }
 </script>
 

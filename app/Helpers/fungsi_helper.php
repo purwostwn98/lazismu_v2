@@ -88,3 +88,33 @@ function getNamaHari($date)
     $dayName = date('l', strtotime($date));
     return $daysOfWeek[$dayName];
 }
+
+function getFirstLetters($inputString)
+{
+    // Split the string into words
+    $words = explode(' ', $inputString);
+
+    // Initialize an empty string for the first letters
+    $firstLetters = '';
+
+    // Loop through each word
+    foreach ($words as $word) {
+        // Append the first letter of each word to the result string
+        if (!empty($word)) {
+            $firstLetters .= $word[0];
+        }
+    }
+
+    return $firstLetters;
+}
+
+function getRandomNumber001_009()
+{
+    // Generate a random number between 1 and 999
+    $randomNumber = rand(1, 999);
+
+    // Format the number to be three digits
+    $formattedNumber = sprintf('%03d', $randomNumber);
+
+    return $formattedNumber;
+}

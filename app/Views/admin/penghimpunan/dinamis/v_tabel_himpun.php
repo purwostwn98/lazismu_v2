@@ -1,9 +1,10 @@
 <?php if (empty($data)) {
     echo ("Tidak ada data");
 } else { ?>
-    <table style="font-size: 11px;" class="table table-responsive">
+    <table style="font-size: 11px; width:100%;" class="table table-responsive">
         <thead class="bgc-primary text-white">
             <th>No</th>
+            <th>#</th>
             <th>Hari, tanggal</th>
             <th>No Kwitansi</th>
             <th>Nama</th>
@@ -18,12 +19,12 @@
             <th>Tgl Setor Bank</th>
             <th>No Kwitansi Bank</th>
             <th>Bank</th>
-            <th>#</th>
         </thead>
         <tbody>
             <?php foreach ($data as $key => $d) { ?>
                 <tr>
                     <td><?= $key + 1; ?></td>
+                    <td><a target="_blank" href="/admin/pdf_a17_penghimpunan/<?= $d['id_himpun']; ?>" class="btn btn-primary btn-sm">Cetak</a><button type="button" onclick="edit('<?= $d['id_himpun']; ?>')" class="btn btn-warning btn-sm">Edit</button><button onclick="hapus('<?= $d['id_himpun']; ?>')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td>
                     <td><?= $d['tanggal_himpun']; ?></td>
                     <td><?= $d['id_himpun']; ?></td>
                     <td><?= $d['nama_muzaki']; ?></td>
@@ -38,7 +39,6 @@
                     <td><?= $d['tgl_setor_bank']; ?></td>
                     <td><?= $d['kwitansi_bank']; ?></td>
                     <td><?= $d['nm_bank']; ?></td>
-                    <td><button class="btn btn-info btn-sm">edit</button></td>
                 </tr>
             <?php } ?>
         </tbody>

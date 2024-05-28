@@ -37,7 +37,7 @@ class PenghimpunanModel extends Model
         $timenow = Time::now();
         $timestamp = $timenow->getTimestamp();
         $firstThreeCharacters = strtoupper(substr($email_muzaki, 0, 3));
-        $id_himpun = $kode . " - " . $firstThreeCharacters . $timestamp;
+        $id_himpun = $kode . "-" . $firstThreeCharacters . $timestamp;
         $dt = [
             'id_himpun' => $id_himpun,
             'email_muzaki' => $email_muzaki,
@@ -67,6 +67,20 @@ class PenghimpunanModel extends Model
     {
         $this->transBegin();
         $this->insertBatch($array_data);
+        if ($this->transStatus() === false) {
+            $this->transRollback();
+            $msg = false;
+        } else {
+            $this->transCommit();
+            $msg = true;
+        }
+        return $msg;
+    }
+
+    public function hapus($id)
+    {
+        $this->transBegin();
+        $this->delete($id);
         if ($this->transStatus() === false) {
             $this->transRollback();
             $msg = false;

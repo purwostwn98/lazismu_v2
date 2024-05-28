@@ -760,4 +760,39 @@ class Dynamic extends BaseController
             exit('Maaf tidak dapat diproses');
         }
     }
+
+    public function load_modal_edit_muzaki()
+    {
+        if ($this->request->isAJAX()) {
+            $id = $this->request->getPost('id');
+            $r = $this->muzakiModel->where('id_muzaki', $id)->first();
+            $data = [
+                'muzaki' => $r
+            ];
+            $msg = [
+                'modal'  => view('admin/penghimpunan/dinamis/modal_edit_muzaki', $data)
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
+
+    public function load_modal_edit_penghimpunan()
+    {
+        if ($this->request->isAJAX()) {
+            $id = $this->request->getPost('id');
+            $r = $this->penghimpunanModel->where('id_himpun', $id)->first();
+
+            $data = [
+                'himpun' => $r
+            ];
+            $msg = [
+                'modal'  => view('admin/penghimpunan/dinamis/modal_edit_himpunan', $data)
+            ];
+            echo json_encode($msg);
+        } else {
+            exit('Maaf tidak dapat diproses');
+        }
+    }
 }
